@@ -4,6 +4,7 @@
 
 * Scale master nodes without restart of whole cluster
 * High availability mode with haproxy load balancer (module: tf_kuber_halb)
+* Tiny and fast overlay network (flannel + wireguard extension) 
 
 ## Interfaces
 
@@ -64,8 +65,8 @@ module "wireguard" {
   source = "git::https://github.com/suquant/tf_wireguard.git?ref=v1.0.0"
 
   count         = "${var.hosts}"
-  connections   = "${module.provider.public_ips}"
-  private_ips   = "${module.provider.private_ips}"
+  connections   = ["${module.provider.public_ips}"]
+  private_ips   = ["${module.provider.private_ips}"]
 }
 
 
@@ -76,7 +77,7 @@ module "etcd" {
   connections = "${module.provider.public_ips}"
 
   hostnames   = "${module.provider.hostnames}"
-  private_ips = "${module.wireguard.ips}"
+  private_ips = ["${module.wireguard.ips}"]
 }
 
 module "docker" {
@@ -84,13 +85,13 @@ module "docker" {
 
   count       = "${var.hosts}"
   # Fix of conccurent apt install running: will run only after wireguard has been installed
-  connections = "${module.wireguard.public_ips}"
+  connections = ["${module.wireguard.public_ips}"]
 
   docker_opts = ["${var.docker_opts}"]
 }
 
 module "kuber_master" {
-  source = "git::https://github.com/suquant/tf_kuber_master.git?ref=v1.0.0"
+  source = ".."
 
   count           = "${var.hosts}"
   connections     = ["${module.docker.public_ips}"]

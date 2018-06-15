@@ -25,8 +25,8 @@ module "wireguard" {
   source = "git::https://github.com/suquant/tf_wireguard.git?ref=v1.0.0"
 
   count         = "${var.hosts}"
-  connections   = "${module.provider.public_ips}"
-  private_ips   = "${module.provider.private_ips}"
+  connections   = ["${module.provider.public_ips}"]
+  private_ips   = ["${module.provider.private_ips}"]
 }
 
 
@@ -37,7 +37,7 @@ module "etcd" {
   connections = "${module.provider.public_ips}"
 
   hostnames   = "${module.provider.hostnames}"
-  private_ips = "${module.wireguard.ips}"
+  private_ips = ["${module.wireguard.ips}"]
 }
 
 module "docker" {
@@ -45,7 +45,7 @@ module "docker" {
 
   count       = "${var.hosts}"
   # Fix of conccurent apt install running: will run only after wireguard has been installed
-  connections = "${module.wireguard.public_ips}"
+  connections = ["${module.wireguard.public_ips}"]
 
   docker_opts = ["${var.docker_opts}"]
 }
