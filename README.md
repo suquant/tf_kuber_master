@@ -91,7 +91,7 @@ module "docker" {
 }
 
 module "kuber_master" {
-  source = ".."
+  source = "git::https://github.com/suquant/tf_kuber_master.git?ref=v1.0.0"
 
   count           = "${var.hosts}"
   connections     = ["${module.docker.public_ips}"]
