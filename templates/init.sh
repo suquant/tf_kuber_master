@@ -14,7 +14,7 @@ until $(kubectl get node $hostname > /dev/null 2>/dev/null); do
   sleep 5
 done
 
-node_labels=${node_labels}
+node_labels="${node_labels}"
 [ ! -z "$node_labels" ] && kubectl label --overwrite node $hostname $node_labels
 [ -f /etc/kubernetes/kube-router.yml ] && kubectl apply -f /etc/kubernetes/kube-router.yml
 kubectl -n kube-system delete ds kube-proxy
