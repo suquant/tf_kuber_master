@@ -1,10 +1,9 @@
 # Kubernetes master service for terraform
 
-## Key features
+## Features
 
-* Scale master nodes without restart of whole cluster
 * High availability mode with haproxy load balancer (module: tf_kuber_halb)
-* Tiny and fast overlay network (flannel + wireguard extension) 
+* Kube-router networks over wireguard vpn 
 
 ## Interfaces
 
