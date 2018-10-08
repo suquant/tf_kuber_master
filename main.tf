@@ -181,7 +181,7 @@ data "external" "kubeconfig" {
   program = ["sh", "${path.module}/scripts/get_kubeconfig.sh"]
 
   query = {
-    host = "${var.connections[0]}"
+    host = "${var.private_ips[0]}"
   }
 }
 
