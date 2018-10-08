@@ -64,7 +64,7 @@ resource "null_resource" "install" {
       "echo 'net.bridge.bridge-nf-call-iptables=1' > /etc/sysctl.d/bridge_nf_call_iptables.conf",
       "sysctl -p",
       "curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
-      "echo 'deb [arch=amd64] https://apt.kubernetes.io/ kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list",
+      "echo \"deb [arch=amd64] https://apt.kubernetes.io/ kubernetes-$$(lsb_release -cs) main\" > /etc/apt/sources.list.d/kubernetes.list",
 
       "apt update",
       "DEBIAN_FRONTEND=noninteractive apt install -yq kubelet kubeadm kubectl kubernetes-cni ipvsadm jq",
@@ -133,8 +133,8 @@ data "template_file" "apt_preference" {
   template = "${file("${path.module}/templates/apt-preference.conf")}"
 
   vars {
-    kubernetes_version  = "${var.kubernetes_version}"
-    cni_version         = "${var.kubernetes_cni_version}"
+    kubernetes_version      = "${var.kubernetes_version}"
+    kubernetes_cni_version  = "${var.kubernetes_cni_version}"
   }
 }
 
@@ -181,7 +181,7 @@ data "external" "kubeconfig" {
   program = ["sh", "${path.module}/scripts/get_kubeconfig.sh"]
 
   query = {
-    host = "${var.private_ips[0]}"
+    host = "${var.connections[0]}"
   }
 }
 
@@ -246,6 +246,12 @@ output "service_cidr" {
 
 output "kubernetes_version" {
   value = "${var.kubernetes_version}"
+
+  depends_on  = ["null_resource.primary", "null_resource.standby"]
+}
+
+output "kubernetes_cni_version" {
+  value = "${var.kubernetes_cni_version}"
 
   depends_on  = ["null_resource.primary", "null_resource.standby"]
 }
