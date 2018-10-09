@@ -43,6 +43,11 @@ variable "node_labels" {
   default = []
 }
 
+variable "node_taints" {
+  type = "list"
+  default = []
+}
+
 
 resource "null_resource" "install" {
   count = "${var.count}"
@@ -153,6 +158,8 @@ data "template_file" "configuration" {
     etcd_endpoints      = "- ${join("\n  - ", split(",", var.etcd_endpoints))}"
     cert_sans           = "- ${join("\n  - ", concat(var.private_ips, list("127.0.0.1")))}"
     node_ip             = "${element(var.private_ips, count.index)}"
+    node_labels         = "${join(",", var.node_labels)}"
+    node_taints         = "${join(",", var.node_taints)}"
   }
 }
 
@@ -162,6 +169,7 @@ data "template_file" "kube_router" {
   vars {
     overlay_cidr        = "${var.overlay_cidr}"
     kube_router_version = "${var.kube_router_version}"
+    node_taints         = "${indent(8, join("\n", data.template_file.node_taints.*.rendered))}"
   }
 }
 
@@ -171,7 +179,6 @@ data "template_file" "init" {
 
   vars {
     kubernetes_version = "${var.kubernetes_version}"
-    node_labels        = "${join(" ", var.node_labels)}"
   }
 }
 
@@ -200,6 +207,18 @@ data "null_data_source" "kubernetes" {
     kubeconfig = "${base64decode(data.external.kubeconfig.result["content"])}"
   }
 }
+
+data "template_file" "node_taints" {
+  count = "${length(var.node_taints)}"
+  template = "- {\"key\": $${jsonencode(key)}, \"value\": $${jsonencode(val)}, \"effect\": $${jsonencode(effect)}}"
+
+  vars {
+    key    = "${element(split("=", element(var.node_taints, count.index)), 0)}"
+    val    = "${element(split(":", element(split("=", element(var.node_taints, count.index)), 1)), 0)}"
+    effect = "${element(split(":", element(split("=", element(var.node_taints, count.index)), 1)), 1)}"
+  }
+}
+
 
 
 output "public_ips" {
@@ -268,4 +287,16 @@ output "kubeconfig" {
 
 output "join_command" {
   value = "${data.external.join_command.result["command"]}"
+}
+
+output "node_labels" {
+  value = "${var.node_labels}"
+
+  depends_on  = ["null_resource.primary", "null_resource.standby"]
+}
+
+output "node_taints" {
+  value = "${var.node_labels}"
+
+  depends_on  = ["null_resource.primary", "null_resource.standby"]
 }

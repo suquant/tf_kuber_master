@@ -6,6 +6,8 @@ apiEndpoint:
 nodeRegistration:
   kubeletExtraArgs:
     node-ip: "${node_ip}"
+    node-labels: "${node_labels}"
+    register-with-taints: "${node_taints}"
 ---
 apiVersion: kubeadm.k8s.io/v1alpha3
 kind: ClusterConfiguration

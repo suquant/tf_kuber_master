@@ -45,7 +45,7 @@ module "wireguard" {
 
 
 module "etcd" {
-  source = "git::https://github.com/suquant/tf_etcd.git?ref=v1.1.0"
+  source = "git::https://github.com/suquant/tf_etcd.git?ref=v1.2.0"
 
   count       = "1"
   connections = ["${module.provider.public_ips[0]}"]
@@ -75,5 +75,9 @@ module "kuber_master" {
   node_labels     = [
     "node.example.com/key1=val1",
     "node.example.com/key2=val2"
+  ]
+  node_taints     = [
+    "foo=bar:NoSchedule",
+    "key=val:NoExecute",
   ]
 }
