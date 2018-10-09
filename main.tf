@@ -156,7 +156,7 @@ data "template_file" "configuration" {
     overlay_cidr        = "${var.overlay_cidr}"
     service_cidr        = "${var.service_cidr}"
     etcd_endpoints      = "- ${join("\n  - ", split(",", var.etcd_endpoints))}"
-    cert_sans           = "- ${join("\n  - ", concat(var.private_ips, list("127.0.0.1")))}"
+    cert_sans           = "- ${join("\n  - ", distinct(concat(var.private_ips, var.connections, list("127.0.0.1"))))}"
     node_ip             = "${element(var.private_ips, count.index)}"
     node_labels         = "${join(",", var.node_labels)}"
     node_taints         = "${join(",", var.node_taints)}"
