@@ -11,19 +11,17 @@ nodeRegistration:
 ---
 apiVersion: kubeadm.k8s.io/v1alpha3
 kind: ClusterConfiguration
-kubernetesVersion: "stable-${join(".", slice(split(".", kubernetes_version), 0, 2))}"
+kubernetesVersion: "${kubernetes_version}"
 controlPlaneEndpoint: "${node_ip}:6443"
 schedulerExtraArgs:
   address: "${node_ip}"
 etcd:
   external:
-    endpoints:
-      ${etcd_endpoints}
+    endpoints: ${etcd_endpoints}
 networking:
   dnsDomain: "${cluster_domain}"
   podSubnet: "${overlay_cidr}"
   serviceSubnet: "${service_cidr}"
-apiServerCertSANs:
-  ${cert_sans}
+apiServerCertSANs: ${cert_sans}
 apiServerExtraArgs:
   endpoint-reconciler-type: lease
