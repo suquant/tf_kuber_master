@@ -1,7 +1,7 @@
 apiVersion: kubeadm.k8s.io/v1alpha3
 kind: InitConfiguration
 apiEndpoint:
-  advertiseAddress: "${node_ip}"
+  advertiseAddress: "0.0.0.0"
   bindPort: 6443
 nodeRegistration:
   kubeletExtraArgs:
@@ -23,5 +23,3 @@ networking:
   podSubnet: "${overlay_cidr}"
   serviceSubnet: "${service_cidr}"
 apiServerCertSANs: ${cert_sans}
-apiServerExtraArgs:
-  endpoint-reconciler-type: lease

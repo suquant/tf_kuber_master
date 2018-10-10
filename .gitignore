@@ -8,5 +8,5 @@
 # .tfvars files
 *.tfvars
 
-# IDE's
 .idea
+example/*.log

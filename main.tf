@@ -27,7 +27,7 @@ variable "api_port" {
 }
 
 variable "kubernetes_version" {
-  default = "1.12"
+  default = "1.12.1"
 }
 
 variable "kubernetes_cni_version" {
@@ -35,7 +35,7 @@ variable "kubernetes_cni_version" {
 }
 
 variable "kube_router_version" {
-  default = "v0.2.0"
+  default = "0.2.0"
 }
 
 variable "node_labels" {
@@ -113,26 +113,27 @@ resource "null_resource" "standby" {
     agent = true
   }
 
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/sync_pki.sh"
-
-    environment {
-      src_host  = "${var.connections[0]}"
-      dst_host  = "${element(var.connections, count.index + 1)}"
-    }
-  }
-
   provisioner "file" {
     content     = "${element(data.template_file.configuration.*.rendered, count.index + 1)}"
     destination = "/etc/kubernetes/configuration.yml"
   }
 
   provisioner "remote-exec" {
-    inline = <<EOF
-${data.template_file.init.rendered}
-EOF
+    inline = [
+      "rsync -apgo -e \"ssh -o StrictHostKeyChecking=no\" --include \"pki\" --include \"pki/ca.crt\" --include \"pki/ca.key\" --include \"pki/sa.crt\" --include \"pki/sa.key\" --include \"pki/front-proxy-ca.crt\" --include \"pki/front-proxy-ca.key\" --include \"admin.conf\" --exclude \"*\" root@${var.connections[0]}:/etc/kubernetes/ /etc/kubernetes/",
+      "kubeadm alpha phase certs all --config /etc/kubernetes/configuration.yml",
+      "kubeadm alpha phase kubelet config write-to-disk --config /etc/kubernetes/configuration.yml",
+      "kubeadm alpha phase kubelet write-env-file --config /etc/kubernetes/configuration.yml",
+      "kubeadm alpha phase kubeconfig kubelet --config /etc/kubernetes/configuration.yml",
+      "systemctl daemon-reload && systemctl restart kubelet",
+
+      "kubeadm alpha phase kubeconfig all --config /etc/kubernetes/configuration.yml",
+      "kubeadm alpha phase controlplane all --config /etc/kubernetes/configuration.yml",
+      "kubeadm alpha phase mark-master --config /etc/kubernetes/configuration.yml"
+    ]
   }
 }
+
 
 data "template_file" "apt_preference" {
   template = "${file("${path.module}/templates/apt-preference.conf")}"
@@ -168,7 +169,7 @@ data "template_file" "kube_router" {
 
   vars {
     overlay_cidr        = "${var.overlay_cidr}"
-    kube_router_version = "${var.kube_router_version}"
+    kube_router_version = "v${var.kube_router_version}"
     node_taints         = "${indent(8, join("\n", data.template_file.node_taints.*.rendered))}"
   }
 }
