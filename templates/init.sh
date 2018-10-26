@@ -16,3 +16,6 @@ done
 
 [ -f /etc/kubernetes/kube-router.yml ] && kubectl apply -f /etc/kubernetes/kube-router.yml
 kubectl -n kube-system delete ds kube-proxy
+
+# Flush iptables
+iptables -t nat -F

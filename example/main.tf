@@ -1,6 +1,6 @@
 variable "token" {}
 variable "hosts" {
-  default = 2
+  default = 1
 }
 variable "overlay_cidr" {
   default = "10.244.0.0/16"
@@ -31,7 +31,7 @@ module "provider" {
 
   count = "${var.hosts}"
 
-  server_type = "cx21"
+  server_type = "cx11"
 }
 
 module "wireguard" {
@@ -45,7 +45,7 @@ module "wireguard" {
 
 
 module "etcd" {
-  source = "git::https://github.com/suquant/tf_etcd.git?ref=v1.2.0"
+  source = "/Users/georgy/workspace/github.com/suquant/tf_etcd"
 
   count       = "1"
   connections = ["${module.provider.public_ips[0]}"]
@@ -72,12 +72,4 @@ module "kuber_master" {
   private_ips     = ["${module.wireguard.vpn_ips}"]
   etcd_endpoints  = "${module.etcd.client_endpoints}"
   overlay_cidr    = "${var.overlay_cidr}"
-  node_labels     = [
-    "node.example.com/key1=val1",
-    "node.example.com/key2=val2"
-  ]
-  node_taints     = [
-    "foo=bar:NoSchedule",
-    "key=val:NoExecute",
-  ]
 }
