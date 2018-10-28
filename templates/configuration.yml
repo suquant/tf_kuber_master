@@ -23,3 +23,10 @@ networking:
   podSubnet: "${overlay_cidr}"
   serviceSubnet: "${service_cidr}"
 apiServerCertSANs: ${cert_sans}
+controllerManagerExtraArgs:
+  allocate-node-cidrs: "true"
+  cluster-cidr: "${overlay_cidr}"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs

@@ -35,7 +35,11 @@ variable "kubernetes_cni_version" {
 }
 
 variable "kube_router_version" {
-  default = "0.2.0"
+  default = "0.2.1"
+}
+
+variable "weavenet_version" {
+  default = "2.4.1"
 }
 
 variable "node_labels" {
@@ -72,7 +76,7 @@ resource "null_resource" "install" {
       "echo \"deb [arch=amd64] https://apt.kubernetes.io/ kubernetes-$$(lsb_release -cs) main\" > /etc/apt/sources.list.d/kubernetes.list",
 
       "apt update",
-      "DEBIAN_FRONTEND=noninteractive apt install -yq kubelet kubeadm kubectl kubernetes-cni ipvsadm jq",
+      "DEBIAN_FRONTEND=noninteractive apt install -yq kubelet kubeadm kubectl kubernetes-cni ipset ipvsadm jq",
     ]
   }
 }
@@ -91,9 +95,14 @@ resource "null_resource" "primary" {
     content     = "${data.template_file.configuration.0.rendered}"
   }
 
+//  provisioner "file" {
+//    destination = "/etc/kubernetes/kube-router.yml"
+//    content     = "${data.template_file.kube_router.rendered}"
+//  }
+
   provisioner "file" {
-    destination = "/etc/kubernetes/kube-router.yml"
-    content     = "${data.template_file.kube_router.rendered}"
+    destination = "/etc/kubernetes/weavenet.yml"
+    content     = "${data.template_file.weavenet.rendered}"
   }
 
   provisioner "remote-exec" {
@@ -161,6 +170,16 @@ data "template_file" "configuration" {
     node_ip             = "${element(var.private_ips, count.index)}"
     node_labels         = "${join(",", var.node_labels)}"
     node_taints         = "${join(",", var.node_taints)}"
+  }
+}
+
+data "template_file" "weavenet" {
+  template = "${file("${path.module}/templates/weavenet.yml")}"
+
+  vars {
+    overlay_cidr        = "${var.overlay_cidr}"
+    weavenet_version    = "${var.weavenet_version}"
+    node_taints         = "${indent(8, join("\n", data.template_file.node_taints.*.rendered))}"
   }
 }
 
